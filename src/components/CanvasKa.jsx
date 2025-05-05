@@ -13,7 +13,6 @@ export default forwardRef(({ zoomLevel }, ref) => {
   const containerRef = useRef(null);
   const measureRef = useRef(null);
   const editorRef = useRef(null);
-  const textAreaRef = useRef(null);
 
   const [canvasElement, setCanvasElement] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -36,7 +35,6 @@ export default forwardRef(({ zoomLevel }, ref) => {
           },
         },
       ]);
-      setEditingId(newId);
     },
     addImage: (imageSrc) => {
       const newId = Date.now();
@@ -45,7 +43,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
         {
           id: newId,
           pos: { x: 200, y: 200 },
-          size: { width: 100, height: 100 },
+          size: { width: 300, height: 300 },
           type: "image",
           properties: {
             src: imageSrc,
@@ -56,9 +54,11 @@ export default forwardRef(({ zoomLevel }, ref) => {
     downloadAsPDF: () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       const promises = canvasElement.map((element) => {
         if (element.type === "text") {
           ctx.font = `${element.properties.fontSize}px ${element.properties.fontFamily}`;
@@ -93,6 +93,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
         }
         return Promise.resolve();
       });
+
       Promise.all(promises).then(() => {
         const pdf = new jsPDF({
           orientation: "landscape",
@@ -102,6 +103,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
         const imgData = canvas.toDataURL("image/png");
         pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
         pdf.save("canvas.pdf");
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -199,79 +201,99 @@ export default forwardRef(({ zoomLevel }, ref) => {
         setEditingId(null);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [editingId]);
 
-  useEffect(() => {
-    if (editingId !== null && textAreaRef.current) {
-      textAreaRef.current.focus();
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [editingId]);
 
   useEffect(() => {
     interact(".draggable").unset();
-    interact(".draggable")
-      .draggable({
-        listeners: {
-          start(event) {
-            const target = event.target;
-            const rect = target.getBoundingClientRect();
-            const containerRect = containerRef.current.getBoundingClientRect();
-            target.dataset.offsetX = (event.clientX - rect.left) / zoomLevel;
-            target.dataset.offsetY = (event.clientY - rect.top) / zoomLevel;
-            target.dataset.containerX = containerRect.left;
-            target.dataset.containerY = containerRect.top;
-          },
-          move(event) {
-            const target = event.target;
-            const id = Number(target.dataset.id);
-            const offsetX = parseFloat(target.dataset.offsetX) || 0;
-            const offsetY = parseFloat(target.dataset.offsetY) || 0;
-            const containerX = parseFloat(target.dataset.containerX) || 0;
-            const containerY = parseFloat(target.dataset.containerY) || 0;
-            const newX =
-              (event.clientX - containerX - offsetX * zoomLevel) / zoomLevel;
-            const newY =
-              (event.clientY - containerY - offsetY * zoomLevel) / zoomLevel;
-            setCanvasElement((prev) =>
-              prev.map((el) =>
-                el.id === id ? { ...el, pos: { x: newX, y: newY } } : el
-              )
-            );
-          },
+    interact(".resizeable").unset();
+
+    interact(".resizeable").resizable({
+      edges: { left: true, right: true, bottom: true, top: true },
+      listeners: {
+        move(event) {
+          const target = event.target;
+          const id = Number(target.dataset.id);
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const deltaX = event.deltaRect.left / zoomLevel;
+          const deltaY = event.deltaRect.top / zoomLevel;
+
+          setCanvasElement((prev) =>
+            prev.map((el) => {
+              if (el.id === id) {
+                const newWidth = event.rect.width / zoomLevel;
+                const newHeight = event.rect.height / zoomLevel;
+                const newX = el.pos.x + deltaX;
+                const newY = el.pos.y + deltaY;
+
+                return {
+                  ...el,
+                  pos: { x: newX, y: newY },
+                  size: {
+                    width: Math.max(newWidth, 20),
+                    height: Math.max(newHeight, 20),
+                  },
+                };
+              }
+              return el;
+            })
+          );
         },
-      })
-      .resizable({
-        edges: { left: true, right: true, bottom: true, top: true },
-        listeners: {
-          move(event) {
-            const id = Number(event.target.dataset.id);
-            const delta = event.deltaRect;
-            setCanvasElement((prev) =>
-              prev.map((el) =>
-                el.id === id
-                  ? {
-                      ...el,
-                      pos: {
-                        x: el.pos.x + delta.left / zoomLevel,
-                        y: el.pos.y + delta.top / zoomLevel,
-                      },
-                      size: {
-                        width: el.size.width + delta.width / zoomLevel,
-                        height: el.size.height + delta.height / zoomLevel,
-                      },
-                    }
-                  : el
-              )
-            );
-          },
+      },
+      modifiers: [
+        interact.modifiers.restrictSize({
+          min: { width: 20 * zoomLevel, height: 20 * zoomLevel },
+        }),
+        interact.modifiers.restrictEdges({
+          outer: containerRef.current,
+        }),
+      ],
+    });
+    interact(".draggable").draggable({
+      listeners: {
+        start(event) {
+          const target = event.target;
+          const rect = target.getBoundingClientRect();
+          const containerRect = containerRef.current.getBoundingClientRect();
+          target.dataset.offsetX = (event.clientX - rect.left) / zoomLevel;
+          target.dataset.offsetY = (event.clientY - rect.top) / zoomLevel;
+          target.dataset.containerX = containerRect.left;
+          target.dataset.containerY = containerRect.top;
         },
-        modifiers: [
-          interact.modifiers.restrictSize({ min: { width: 50, height: 20 } }),
-        ],
-        inertia: true,
-      });
+        move(event) {
+          const target = event.target;
+          const id = Number(target.dataset.id);
+          const offsetX = parseFloat(target.dataset.offsetX) || 0;
+          const offsetY = parseFloat(target.dataset.offsetY) || 0;
+          const containerX = parseFloat(target.dataset.containerX) || 0;
+          const containerY = parseFloat(target.dataset.containerY) || 0;
+
+          const newX =
+            (event.clientX - containerX - offsetX * zoomLevel) / zoomLevel;
+          const newY =
+            (event.clientY - containerY - offsetY * zoomLevel) / zoomLevel;
+
+          setCanvasElement((prev) =>
+            prev.map((el) =>
+              el.id === id
+                ? {
+                    ...el,
+                    pos: {
+                      x: newX,
+                      y: newY,
+                    },
+                  }
+                : el
+            )
+          );
+        },
+      },
+    });
+
     return () => {
       interact(".draggable").unset();
     };
@@ -296,8 +318,11 @@ export default forwardRef(({ zoomLevel }, ref) => {
             height={1600}
             className="border border-gray-400 bg-white"
           />
-          <div className="absolute top-0 left-0">
-            {canvasElement.map((element) => {
+          <div
+            className="draggable-container"
+            style={{ position: "absolute", top: 0, left: 0 }}
+          >
+            {canvasElement.map((element, index) => {
               if (element.type === "text") {
                 return (
                   <div
@@ -310,19 +335,31 @@ export default forwardRef(({ zoomLevel }, ref) => {
                       top: element.pos.y,
                       width: element.size.width,
                       height: element.size.height,
-                      cursor: "move",
+                      cursor: editingId === element.id ? "default" : "move",
                       userSelect: "none",
-                      zIndex: 5,
+                      border:
+                        editingId === element.id
+                          ? "1px dashed #000"
+                          : "1px solid transparent",
                     }}
                     onDoubleClick={() => handleDoubleClick(element.id)}
                   >
                     {editingId === element.id ? (
-                      <div
-                        ref={editorRef}
-                        style={{ position: "relative", zIndex: 999 }}
-                      >
-                        <div className="absolute top-[-50px] left-0 bg-white border border-gray-300 p-1 flex gap-2 z-[999]">
-                          <label className="text-xs">
+                      <div ref={editorRef} style={{ position: "relative" }}>
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: -50,
+                            left: 0,
+                            background: "white",
+                            border: "1px solid #ccc",
+                            padding: "5px",
+                            display: "flex",
+                            gap: "10px",
+                            zIndex: 10,
+                          }}
+                        >
+                          <label>
                             Font Size:
                             <input
                               type="number"
@@ -332,10 +369,10 @@ export default forwardRef(({ zoomLevel }, ref) => {
                               }
                               min="8"
                               max="100"
-                              className="ml-1 w-12 border px-1 text-xs"
+                              style={{ width: "60px", marginLeft: "5px" }}
                             />
                           </label>
-                          <label className="text-xs">
+                          <label>
                             Color:
                             <input
                               type="color"
@@ -343,23 +380,29 @@ export default forwardRef(({ zoomLevel }, ref) => {
                               onChange={(e) =>
                                 handleColorChange(element.id, e.target.value)
                               }
-                              className="ml-1"
+                              style={{ marginLeft: "5px" }}
                             />
                           </label>
                         </div>
                         <textarea
-                          ref={textAreaRef}
-                          autoFocus
                           value={element.properties.text}
                           onChange={(e) =>
                             handleTextChange(element.id, e.target.value)
                           }
                           onBlur={(e) => handleBlurOrEnter(element.id, e)}
                           onKeyDown={(e) => handleBlurOrEnter(element.id, e)}
-                          className="w-full h-full resize-none bg-transparent text-black border border-gray-300 p-1 text-sm outline-none"
+                          autoFocus
                           style={{
+                            width: `${element.size.width}px`,
+                            height: `${element.size.height}px`,
                             fontSize: `${element.properties.fontSize}px`,
+                            color: element.properties.color,
                             fontFamily: element.properties.fontFamily,
+                            border: "1px solid #ccc",
+                            resize: "none",
+                            padding: "2px",
+                            background: "transparent",
+                            boxSizing: "border-box",
                           }}
                         />
                       </div>
@@ -370,6 +413,8 @@ export default forwardRef(({ zoomLevel }, ref) => {
                           color: element.properties.color,
                           fontFamily: element.properties.fontFamily,
                           whiteSpace: "pre-wrap",
+                          width: "100%",
+                          height: "100%",
                         }}
                       >
                         {element.properties.text}
@@ -381,7 +426,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
                 return (
                   <div
                     key={element.id}
-                    className="draggable"
+                    className="draggable resizeable"
                     data-id={element.id}
                     style={{
                       position: "absolute",
@@ -390,18 +435,13 @@ export default forwardRef(({ zoomLevel }, ref) => {
                       width: element.size.width,
                       height: element.size.height,
                       cursor: "move",
-                      userSelect: "none",
                       zIndex: 2,
+                      backgroundImage: `url(${element.properties.src})`,
+                      backgroundSize: "100% 100%",
+                      backgroundRepeat: "no-repeat",
+                      border: "1px solid transparent",
                     }}
-                  >
-                    <img
-                      src={element.properties.src}
-                      alt=""
-                      width={element.size.width}
-                      height={element.size.height}
-                      className="pointer-events-none select-none"
-                    />
-                  </div>
+                  />
                 );
               }
               return null;
