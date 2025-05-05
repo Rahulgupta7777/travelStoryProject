@@ -5,6 +5,10 @@ import Toolbox from "./Toolbox";
 import { FiDownload } from "react-icons/fi";
 import { FiDownloadCloud } from "react-icons/fi";
 import CanvasKa from "./CanvasKa";
+<<<<<<< Updated upstream
+=======
+// import Loader from "./Loader";
+>>>>>>> Stashed changes
 
 export default function DotGridEditor() {
   const [zoomDisable, setZoomDisable] = useState(false);
@@ -60,6 +64,7 @@ export default function DotGridEditor() {
 
         <div className="p-4 border-l shadow bg-white sticky right-0 top-0">
           <Toolbox targetRef={targetRef} />
+          {/* <Loader /> */}
         </div>
       </div>
     </div>
