@@ -378,7 +378,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
                             fontSize: `${element.properties.fontSize}px`,
                             color: element.properties.color,
                             fontFamily: element.properties.fontFamily,
-                            border: "1px solid #ccc",
+                            border: "1px solid  #ccc",
                             resize: "none",
                             padding: "2px",
                             background: "transparent",
