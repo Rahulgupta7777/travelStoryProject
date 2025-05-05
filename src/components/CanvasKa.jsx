@@ -13,6 +13,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
   const containerRef = useRef(null);
   const measureRef = useRef(null);
   const editorRef = useRef(null);
+  const textAreaRef = useRef(null);
 
   const [canvasElement, setCanvasElement] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -35,6 +36,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
           },
         },
       ]);
+      setEditingId(newId);
     },
     addImage: (imageSrc) => {
       const newId = Date.now();
@@ -54,11 +56,9 @@ export default forwardRef(({ zoomLevel }, ref) => {
     downloadAsPDF: () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       const promises = canvasElement.map((element) => {
         if (element.type === "text") {
           ctx.font = `${element.properties.fontSize}px ${element.properties.fontFamily}`;
@@ -93,7 +93,6 @@ export default forwardRef(({ zoomLevel }, ref) => {
         }
         return Promise.resolve();
       });
-
       Promise.all(promises).then(() => {
         const pdf = new jsPDF({
           orientation: "landscape",
@@ -103,7 +102,6 @@ export default forwardRef(({ zoomLevel }, ref) => {
         const imgData = canvas.toDataURL("image/png");
         pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
         pdf.save("canvas.pdf");
-
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -201,11 +199,14 @@ export default forwardRef(({ zoomLevel }, ref) => {
         setEditingId(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [editingId]);
+
+  useEffect(() => {
+    if (editingId !== null && textAreaRef.current) {
+      textAreaRef.current.focus();
+    }
   }, [editingId]);
 
   useEffect(() => {
@@ -229,12 +230,10 @@ export default forwardRef(({ zoomLevel }, ref) => {
             const offsetY = parseFloat(target.dataset.offsetY) || 0;
             const containerX = parseFloat(target.dataset.containerX) || 0;
             const containerY = parseFloat(target.dataset.containerY) || 0;
-
             const newX =
               (event.clientX - containerX - offsetX * zoomLevel) / zoomLevel;
             const newY =
               (event.clientY - containerY - offsetY * zoomLevel) / zoomLevel;
-
             setCanvasElement((prev) =>
               prev.map((el) =>
                 el.id === id ? { ...el, pos: { x: newX, y: newY } } : el
@@ -268,8 +267,11 @@ export default forwardRef(({ zoomLevel }, ref) => {
             );
           },
         },
+        modifiers: [
+          interact.modifiers.restrictSize({ min: { width: 50, height: 20 } }),
+        ],
+        inertia: true,
       });
-
     return () => {
       interact(".draggable").unset();
     };
@@ -294,10 +296,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
             height={1600}
             className="border border-gray-400 bg-white"
           />
-          <div
-            className="draggable-container"
-            style={{ position: "absolute", top: 0, left: 0 }}
-          >
+          <div className="absolute top-0 left-0">
             {canvasElement.map((element) => {
               if (element.type === "text") {
                 return (
@@ -320,26 +319,10 @@ export default forwardRef(({ zoomLevel }, ref) => {
                     {editingId === element.id ? (
                       <div
                         ref={editorRef}
-                        style={{
-                          position: "relative",
-                          zIndex: 999,
-                          background: "white",
-                        }}
+                        style={{ position: "relative", zIndex: 999 }}
                       >
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: -50,
-                            left: 0,
-                            background: "white",
-                            border: "1px solid #ccc",
-                            padding: "5px",
-                            display: "flex",
-                            gap: "10px",
-                            zIndex: 999,
-                          }}
-                        >
-                          <label>
+                        <div className="absolute top-[-50px] left-0 bg-white border border-gray-300 p-1 flex gap-2 z-[999]">
+                          <label className="text-xs">
                             Font Size:
                             <input
                               type="number"
@@ -349,10 +332,10 @@ export default forwardRef(({ zoomLevel }, ref) => {
                               }
                               min="8"
                               max="100"
-                              style={{ width: "60px", marginLeft: "5px" }}
+                              className="ml-1 w-12 border px-1 text-xs"
                             />
                           </label>
-                          <label>
+                          <label className="text-xs">
                             Color:
                             <input
                               type="color"
@@ -360,11 +343,12 @@ export default forwardRef(({ zoomLevel }, ref) => {
                               onChange={(e) =>
                                 handleColorChange(element.id, e.target.value)
                               }
-                              style={{ marginLeft: "5px" }}
+                              className="ml-1"
                             />
                           </label>
                         </div>
                         <textarea
+                          ref={textAreaRef}
                           autoFocus
                           value={element.properties.text}
                           onChange={(e) =>
@@ -372,18 +356,10 @@ export default forwardRef(({ zoomLevel }, ref) => {
                           }
                           onBlur={(e) => handleBlurOrEnter(element.id, e)}
                           onKeyDown={(e) => handleBlurOrEnter(element.id, e)}
+                          className="w-full h-full resize-none bg-transparent text-black border border-gray-300 p-1 text-sm outline-none"
                           style={{
-                            width: `${element.size.width}px`,
-                            height: `${element.size.height}px`,
                             fontSize: `${element.properties.fontSize}px`,
-                            color: element.properties.color,
                             fontFamily: element.properties.fontFamily,
-                            border: "1px solid  #ccc",
-                            resize: "none",
-                            padding: "2px",
-                            background: "transparent",
-                            boxSizing: "border-box",
-                            zIndex: 999,
                           }}
                         />
                       </div>
@@ -420,11 +396,10 @@ export default forwardRef(({ zoomLevel }, ref) => {
                   >
                     <img
                       src={element.properties.src}
-                      alt="image"
-                      data-id={element.id}
+                      alt=""
                       width={element.size.width}
                       height={element.size.height}
-                      style={{ pointerEvents: "none", userSelect: "none" }}
+                      className="pointer-events-none select-none"
                     />
                   </div>
                 );
