@@ -5,7 +5,6 @@ import Toolbox from "./Toolbox";
 import { FiDownload } from "react-icons/fi";
 import { FiDownloadCloud } from "react-icons/fi";
 import CanvasKa from "./CanvasKa";
-import Loader from "./Loader";
 
 export default function DotGridEditor() {
   const [zoomDisable, setZoomDisable] = useState(false);
@@ -15,7 +14,6 @@ export default function DotGridEditor() {
 
   return (
     <div className="w-screen h-screen flex flex-col bg-white">
-      <Loader />
       <div className="flex justify-end gap-2 p-4 border-b shadow sticky top-0 bg-white z-10">
         <button
           className="bg-white px-3 py-1 border rounded shadow flex items-center gap-1"
