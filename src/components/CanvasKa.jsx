@@ -210,46 +210,65 @@ export default forwardRef(({ zoomLevel }, ref) => {
 
   useEffect(() => {
     interact(".draggable").unset();
-    interact(".draggable").draggable({
-      listeners: {
-        start(event) {
-          const target = event.target;
-          const rect = target.getBoundingClientRect();
-          const containerRect = containerRef.current.getBoundingClientRect();
-          target.dataset.offsetX = (event.clientX - rect.left) / zoomLevel;
-          target.dataset.offsetY = (event.clientY - rect.top) / zoomLevel;
-          target.dataset.containerX = containerRect.left;
-          target.dataset.containerY = containerRect.top;
-        },
-        move(event) {
-          const target = event.target;
-          const id = Number(target.dataset.id);
-          const offsetX = parseFloat(target.dataset.offsetX) || 0;
-          const offsetY = parseFloat(target.dataset.offsetY) || 0;
-          const containerX = parseFloat(target.dataset.containerX) || 0;
-          const containerY = parseFloat(target.dataset.containerY) || 0;
+    interact(".draggable")
+      .draggable({
+        listeners: {
+          start(event) {
+            const target = event.target;
+            const rect = target.getBoundingClientRect();
+            const containerRect = containerRef.current.getBoundingClientRect();
+            target.dataset.offsetX = (event.clientX - rect.left) / zoomLevel;
+            target.dataset.offsetY = (event.clientY - rect.top) / zoomLevel;
+            target.dataset.containerX = containerRect.left;
+            target.dataset.containerY = containerRect.top;
+          },
+          move(event) {
+            const target = event.target;
+            const id = Number(target.dataset.id);
+            const offsetX = parseFloat(target.dataset.offsetX) || 0;
+            const offsetY = parseFloat(target.dataset.offsetY) || 0;
+            const containerX = parseFloat(target.dataset.containerX) || 0;
+            const containerY = parseFloat(target.dataset.containerY) || 0;
 
-          const newX =
-            (event.clientX - containerX - offsetX * zoomLevel) / zoomLevel;
-          const newY =
-            (event.clientY - containerY - offsetY * zoomLevel) / zoomLevel;
+            const newX =
+              (event.clientX - containerX - offsetX * zoomLevel) / zoomLevel;
+            const newY =
+              (event.clientY - containerY - offsetY * zoomLevel) / zoomLevel;
 
-          setCanvasElement((prev) =>
-            prev.map((el) =>
-              el.id === id
-                ? {
-                    ...el,
-                    pos: {
-                      x: newX,
-                      y: newY,
-                    },
-                  }
-                : el
-            )
-          );
+            setCanvasElement((prev) =>
+              prev.map((el) =>
+                el.id === id ? { ...el, pos: { x: newX, y: newY } } : el
+              )
+            );
+          },
         },
-      },
-    });
+      })
+      .resizable({
+        edges: { left: true, right: true, bottom: true, top: true },
+        listeners: {
+          move(event) {
+            const id = Number(event.target.dataset.id);
+            const delta = event.deltaRect;
+            setCanvasElement((prev) =>
+              prev.map((el) =>
+                el.id === id
+                  ? {
+                      ...el,
+                      pos: {
+                        x: el.pos.x + delta.left / zoomLevel,
+                        y: el.pos.y + delta.top / zoomLevel,
+                      },
+                      size: {
+                        width: el.size.width + delta.width / zoomLevel,
+                        height: el.size.height + delta.height / zoomLevel,
+                      },
+                    }
+                  : el
+              )
+            );
+          },
+        },
+      });
 
     return () => {
       interact(".draggable").unset();
@@ -294,11 +313,19 @@ export default forwardRef(({ zoomLevel }, ref) => {
                       height: element.size.height,
                       cursor: "move",
                       userSelect: "none",
+                      zIndex: 5,
                     }}
                     onDoubleClick={() => handleDoubleClick(element.id)}
                   >
                     {editingId === element.id ? (
-                      <div ref={editorRef} style={{ position: "relative" }}>
+                      <div
+                        ref={editorRef}
+                        style={{
+                          position: "relative",
+                          zIndex: 999,
+                          background: "white",
+                        }}
+                      >
                         <div
                           style={{
                             position: "absolute",
@@ -309,7 +336,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
                             padding: "5px",
                             display: "flex",
                             gap: "10px",
-                            zIndex: 10,
+                            zIndex: 999,
                           }}
                         >
                           <label>
@@ -338,13 +365,13 @@ export default forwardRef(({ zoomLevel }, ref) => {
                           </label>
                         </div>
                         <textarea
+                          autoFocus
                           value={element.properties.text}
                           onChange={(e) =>
                             handleTextChange(element.id, e.target.value)
                           }
                           onBlur={(e) => handleBlurOrEnter(element.id, e)}
                           onKeyDown={(e) => handleBlurOrEnter(element.id, e)}
-                          autoFocus
                           style={{
                             width: `${element.size.width}px`,
                             height: `${element.size.height}px`,
@@ -356,6 +383,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
                             padding: "2px",
                             background: "transparent",
                             boxSizing: "border-box",
+                            zIndex: 999,
                           }}
                         />
                       </div>
@@ -387,6 +415,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
                       height: element.size.height,
                       cursor: "move",
                       userSelect: "none",
+                      zIndex: 2,
                     }}
                   >
                     <img
@@ -395,6 +424,7 @@ export default forwardRef(({ zoomLevel }, ref) => {
                       data-id={element.id}
                       width={element.size.width}
                       height={element.size.height}
+                      style={{ pointerEvents: "none", userSelect: "none" }}
                     />
                   </div>
                 );
