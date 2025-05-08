@@ -53,6 +53,19 @@ export default forwardRef(({ zoomLevel }, ref) => {
         },
       ]);
     },
+    getCanvasElements: () => {
+      return canvasElement.map((element) => ({
+        type: element.type,
+        x: element.pos.x,
+        y: element.pos.y,
+        width: element.size.width,
+        height: element.size.height,
+        color: element.properties.color,
+        fontSize: element.properties.fontSize,
+        text: element.properties.text,
+        url: element.properties.src,
+      }));
+    },
     downloadAsPDF: () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");

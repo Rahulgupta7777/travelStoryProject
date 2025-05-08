@@ -10,13 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@remotion/bundler": "^4.0.298",
+    "@remotion/cli": "4.0.298",
+    "@remotion/player": "4.0.298",
+    "@remotion/renderer": "^4.0.298",
     "@tailwindcss/vite": "^4.1.5",
+    "animejs": "^4.0.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "html2canvas": "^1.4.1",
     "interactjs": "^1.10.27",
     "jspdf": "^3.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
+    "remotion": "4.0.298",
     "tailwindcss": "^4.1.5"
   },
   "devDependencies": {

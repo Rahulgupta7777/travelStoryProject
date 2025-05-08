@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
-<<<<<<< Updated upstream
-import anime from "animejs";
+import { animate, stagger } from "animejs";
 
 export default function Loader({
   text = "Saving Travel Story Journal PDF...",
@@ -8,77 +7,74 @@ export default function Loader({
   const loaderRef = useRef(null);
 
   useEffect(() => {
-    anime({
-      targets: loaderRef.current,
+    if (!loaderRef.current) return;
+    const container = loaderRef.current;
+
+    const fadeAnim = animate(container, {
       opacity: [0, 1],
       translateY: [-20, 0],
       duration: 800,
       easing: "easeOutQuad",
     });
 
-    anime({
-      targets: ".dot",
-      scale: [1, 1.5, 1],
-      opacity: [1, 0.5, 1],
-      delay: anime.stagger(200, { start: 500 }),
-      duration: 1000,
+    const pulseAnim = animate(".loader-container", {
+      scale: [0.98, 1],
+      opacity: [0.95, 1],
+      duration: 1500,
       loop: true,
+      direction: "alternate",
       easing: "easeInOutSine",
     });
+
+    const dots = container.querySelectorAll(".dot");
+    const dotsAnim = animate(dots, {
+      translateY: [-8, 0],
+      scale: [1, 1.5, 1],
+      opacity: [0.4, 1, 0.4],
+      duration: 1200,
+      loop: true,
+      direction: "alternate",
+      easing: "easeOutElastic",
+      delay: stagger(200, { start: 500 }),
+    });
+
+    const progressAnim = animate(".progress-bar", {
+      width: ["0%", "100%"],
+      duration: 2000,
+      easing: "easeInOutQuad",
+      loop: true,
+    });
+
+    return () => {
+      fadeAnim.revert();
+      pulseAnim.revert();
+      dotsAnim.revert();
+      progressAnim.revert();
+    };
   }, []);
 
   return (
     <div
       ref={loaderRef}
-      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]"
+      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[9999]"
     >
-      <div className="bg-white rounded-2xl p-6 text-center shadow-lg min-w-[280px] max-w-[90%]">
-        <div className="text-xl font-semibold mb-2">
-          ✈️ {text}
-          <span className="dot mx-1">.</span>
-          <span className="dot mx-1">.</span>
-          <span className="dot mx-1">.</span>
+      <div className="loader-container bg-white rounded-2xl p-8 text-center shadow-2xl min-w-[320px] max-w-[90%] transform transition-all">
+        <div className="text-2xl font-semibold mb-4 flex items-center justify-center gap-2">
+          <span className="animate-bounce">✈️</span>
+          <span>{text}</span>
+          <div className="flex items-center">
+            <span className="dot mx-1 text-blue-500">.</span>
+            <span className="dot mx-1 text-blue-500">.</span>
+            <span className="dot mx-1 text-blue-500">.</span>
+          </div>
         </div>
-        <div className="text-sm text-gray-500">Please wait...</div>
-=======
-import { anime } from "animejs";
-
-function Toast() {
-  const progressRef = useRef(null);
-
-  const handleProgress = () => {
-    anime({
-      targets: progressRef.current,
-      width: "100%",
-      easing: "linear",
-      duration: 5000, // Adjust duration as needed
-    });
-  };
-
-  useEffect(() => {
-    handleProgress();
-  }, []);
-
-  return (
-    <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-50 flex flex-col items-start max-w-sm">
-      <div id="toast-progress">
-        <p className="text-base font-medium text-gray-800">
-          Processing:
-          <span className="ml-2 relative top-1 block w-64 h-5 bg-gray-200 rounded overflow-hidden">
-            <span
-              ref={progressRef}
-              className="bg-blue-500 h-full block"
-              style={{ width: "0%" }}
-            ></span>
-          </span>
-        </p>
->>>>>>> Stashed changes
+        <div className="text-sm text-gray-600 font-medium mb-4">
+          Please wait while we process your request...
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+          <div className="progress-bar bg-blue-500 h-1.5 rounded-full"></div>
+        </div>
       </div>
     </div>
   );
 }
-<<<<<<< Updated upstream
-=======
-
-export default Toast;
->>>>>>> Stashed changes
