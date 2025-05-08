@@ -1,13 +1,21 @@
-import { FiLock, FiPlus, FiMinus } from "react-icons/fi";
+import {
+  FiLock,
+  FiPlus,
+  FiMinus,
+  FiDownload,
+  FiDownloadCloud,
+  FiImage,
+  FiType,
+  FiX,
+} from "react-icons/fi";
 
 import { useState, useRef } from "react";
 import Toolbox from "./Toolbox";
-import { FiDownload } from "react-icons/fi";
-import { FiDownloadCloud } from "react-icons/fi";
 import CanvasKa from "./CanvasKa";
 import Loader from "./Loader";
 import { Player } from "@remotion/player";
 import { CanvasVideo } from "../../remotion/Composition";
+import themes from "./_constants/themes";
 
 export default function DotGridEditor() {
   const [zoomDisable, setZoomDisable] = useState(false);
@@ -16,6 +24,7 @@ export default function DotGridEditor() {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [canvasElements, setCanvasElements] = useState([]);
+  const [selectedTheme, setSelectedTheme] = useState(themes[0]);
 
   const targetRef = useRef();
 
@@ -41,10 +50,16 @@ export default function DotGridEditor() {
     setLoadingMessage("Generating Animated Travel Story Video...");
     try {
       const elements = await targetRef.current.getCanvasElements();
+      if (!elements || elements.length === 0) {
+        throw new Error(
+          "No elements to preview. Please add some content first."
+        );
+      }
       setCanvasElements(elements);
       setShowVideoPreview(true);
     } catch (error) {
       console.error("Error generating video:", error);
+      alert(error.message);
     } finally {
       setTimeout(() => {
         setIsLoading(false);
@@ -80,6 +95,7 @@ export default function DotGridEditor() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      setShowVideoPreview(false);
     } catch (error) {
       console.error("Error rendering video:", error);
       alert("Failed to render video: " + error.message);
@@ -92,68 +108,125 @@ export default function DotGridEditor() {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-white">
-      <div className="flex justify-end gap-2 p-4 border-b shadow sticky top-0 bg-white z-10">
-        <button
-          className={`bg-white px-3 py-1 border rounded shadow flex items-center gap-1 transition-all ${
-            isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
-          }`}
-          onClick={handleDownloadPDF}
-          disabled={isLoading}
-        >
-          <FiDownload />
-          Download PDF
-        </button>
-        <button
-          className={`bg-black text-white px-4 py-1 rounded shadow flex items-center gap-1 transition-all ${
-            isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-800"
-          }`}
-          onClick={handleDownloadVideo}
-          disabled={isLoading}
-        >
-          <FiDownloadCloud />
-          Download Animated Video
-        </button>
+    <div className="h-screen flex flex-col bg-gray-50  ">
+      {/* Header */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-row items-center justify-between">
+            <h1
+              className="text-3xl font-bold tracking-tight"
+              style={{
+                background: "linear-gradient(135deg, #1a365d 0%, #2d3748 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                fontFamily: "'Playfair Display', serif",
+                letterSpacing: "-0.02em",
+                marginBottom: 0,
+                lineHeight: 1.2,
+                marginLeft: "500px",
+              }}
+            >
+              Canvas
+            </h1>
+            <div className="flex flex-row items-center gap-1 ml-[450px] ">
+              <button
+                className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium px-9 ${
+                  isLoading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:shadow-md hover:border-gray-400"
+                }`}
+                onClick={handleDownloadPDF}
+                disabled={isLoading}
+                style={{ height: "44px" }}
+              >
+                <FiDownload className="text-gray-500 text-base" />
+                <span>Download PDF</span>
+              </button>
+
+              <button
+                className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium px-9  ${
+                  isLoading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:shadow-md hover:border-gray-400"
+                }`}
+                onClick={handleDownloadVideo}
+                disabled={isLoading}
+                style={{ height: "44px" }}
+              >
+                <FiDownloadCloud className="text-gray-500 text-base" />
+                <span>Download Video</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex flex-col gap-2 p-4 border-r shadow bg-white sticky left-0 top-0 z-10">
+        {/* Left Toolbar */}
+        <div className="flex flex-col gap-3 p-4 border-r shadow-sm bg-white sticky left-0 top-0 z-10">
           <button
-            className="bg-white p-1 border rounded shadow"
+            className="bg-white p-2 border rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
             onClick={() => !zoomDisable && setZoomLevel(zoomLevel * 1.05)}
           >
-            <FiPlus />
+            <FiPlus className="text-gray-600" />
           </button>
           <button
-            className="bg-white p-1 border rounded shadow"
+            className="bg-white p-2 border rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
             onClick={() => !zoomDisable && setZoomLevel(zoomLevel * 0.95)}
           >
-            <FiMinus />
+            <FiMinus className="text-gray-600" />
           </button>
           <button
-            className={`bg-${zoomDisable ? "black" : "white"} p-1 text-${
-              !zoomDisable ? "black" : "white"
-            } border rounded shadow`}
+            className={`p-2 border rounded-lg shadow-sm transition-colors ${
+              zoomDisable
+                ? "bg-gray-800 text-white"
+                : "bg-white hover:bg-gray-50 text-gray-600"
+            }`}
             onClick={() => setZoomDisable(!zoomDisable)}
           >
             <FiLock />
           </button>
         </div>
 
+        {/* Canvas Area */}
         <div className="flex-1 overflow-auto">
-          <CanvasKa zoomLevel={zoomLevel} ref={targetRef} />
+          <CanvasKa
+            zoomLevel={zoomLevel}
+            ref={targetRef}
+            theme={selectedTheme}
+          />
         </div>
 
-        <div className="p-4 border-l shadow bg-white sticky right-0 top-0">
-          <Toolbox targetRef={targetRef} />
+        {/* Right Toolbar */}
+        <div className="p-4 border-l shadow-sm bg-white sticky right-0 top-0">
+          <Toolbox targetRef={targetRef} onThemeChange={setSelectedTheme} />
         </div>
       </div>
 
+      {/* Video Preview Modal */}
       {showVideoPreview && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-2xl p-8 max-w-[90%] w-[800px]">
-            <h2 className="text-2xl font-semibold mb-4">Video Preview</h2>
-            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+          <div className="bg-white rounded-2xl p-8 max-w-[90%] w-[800px] shadow-xl relative">
+            <button
+              onClick={() => setShowVideoPreview(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <FiX className="text-gray-500" />
+            </button>
+            <h2
+              className="text-2xl font-semibold mb-4"
+              style={{
+                background: "linear-gradient(135deg, #1a365d 0%, #2d3748 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                fontFamily: "'Playfair Display', serif",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Video Preview
+            </h2>
+            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden shadow-inner">
               <Player
                 component={CanvasVideo}
                 durationInFrames={150}
@@ -162,17 +235,20 @@ export default function DotGridEditor() {
                 fps={30}
                 inputProps={{ elements: canvasElements }}
                 style={{ width: "100%", height: "100%" }}
+                controls
+                autoPlay
+                loop
               />
             </div>
-            <div className="flex justify-end gap-2 mt-4">
+            <div className="flex justify-end gap-3 mt-6">
               <button
-                className="px-4 py-2 border rounded hover:bg-gray-50"
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
                 onClick={() => setShowVideoPreview(false)}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 onClick={handleRenderVideo}
               >
                 Render Video
