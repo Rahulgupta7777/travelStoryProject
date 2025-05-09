@@ -155,7 +155,7 @@ export default function DotGridEditor() {
             >
               Canvas
             </h1>
-            <div className="flex flex-row items-center gap-1 ml-[650px]">
+            <div className="flex flex-row items-center gap-1 ml-[350px]">
               <button
                 className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium ${
                   isLoading
