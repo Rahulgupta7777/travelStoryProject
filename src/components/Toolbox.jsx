@@ -49,59 +49,59 @@ function Toolbox({ targetRef, onThemeChange }) {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 bg-white rounded-xl shadow-lg h-full overflow-y-auto ">
+    <div className="flex flex-col gap-3 p-2 bg-white rounded-lg shadow h-full overflow-y-auto">
       {/* Add Elements Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-3">
+      <div className="space-y-2">
+        <h3 className="text-base font-semibold text-gray-700 border-b pb-1">
           Add Elements
         </h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleAddText}
-            className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+            className="flex items-center justify-center gap-2 px-2 py-1 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
             style={{
               color: selectedTheme.properties.textColor,
               borderColor: selectedTheme.properties.primary,
               background: selectedTheme.properties.background,
             }}
           >
-            <FiType className="text-2xl" />
-            <span className="text-base font-medium">Add Text</span>
+            <FiType className="text-lg" />
+            <span className="text-sm font-medium">Add Text</span>
           </button>
           <button
             onClick={handleAddImage}
-            className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+            className="flex items-center justify-center gap-2 px-2 py-1 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
             style={{
               color: selectedTheme.properties.textColor,
               borderColor: selectedTheme.properties.primary,
               background: selectedTheme.properties.background,
             }}
           >
-            <FiImage className="text-2xl" />
-            <span className="text-base font-medium">Add Image</span>
+            <FiImage className="text-lg" />
+            <span className="text-sm font-medium">Add Image</span>
           </button>
         </div>
       </div>
 
       {/* Stickers Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-3">
-
+      <div className="space-y-2">
+        <h3 className="text-base font-semibold text-gray-700 border-b pb-1">
+          Stickers
         </h3>
         <StickerPanel onAddSticker={handleAddSticker} />
       </div>
 
       {/* Theme Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-3">
+      <div className="space-y-2">
+        <h3 className="text-base font-semibold text-gray-700 border-b pb-1">
           Theme
         </h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
           {themes.map((theme) => (
             <button
               key={theme.name}
               onClick={() => handleThemeChange(theme)}
-              className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+              className={`p-2 rounded-lg border transition-all duration-200 ${
                 selectedTheme.name === theme.name
                   ? "ring-2 ring-offset-2 ring-blue-500"
                   : "hover:border-blue-400 hover:bg-blue-50"
@@ -113,11 +113,11 @@ function Toolbox({ targetRef, onThemeChange }) {
               }}
             >
               <div
-                className="w-full h-16 rounded-lg mb-2"
+                className="w-full h-8 rounded mb-1"
                 style={{ background: theme.properties.buttonGradient }}
               />
               <span
-                className="text-sm font-medium block text-center"
+                className="text-xs font-medium block text-center"
                 style={{ color: theme.properties.textColor }}
               >
                 {theme.name}
@@ -128,34 +128,34 @@ function Toolbox({ targetRef, onThemeChange }) {
       </div>
 
       {/* Actions Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-3">
+      <div className="space-y-2">
+        <h3 className="text-base font-semibold text-gray-700 border-b pb-1">
           Actions
         </h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleDuplicate}
-            className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+            className="flex items-center justify-center gap-2 px-2 py-1 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
             style={{
               color: selectedTheme.properties.textColor,
               borderColor: selectedTheme.properties.primary,
               background: selectedTheme.properties.background,
             }}
           >
-            <FiCopy className="text-2xl" />
-            <span className="text-base font-medium">Duplicate</span>
+            <FiCopy className="text-lg" />
+            <span className="text-sm font-medium">Duplicate</span>
           </button>
           <button
             onClick={handleClearCanvas}
-            className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-red-400 hover:bg-red-50 transition-all duration-200"
+            className="flex items-center justify-center gap-2 px-2 py-1 rounded-lg border border-gray-200 hover:border-red-400 hover:bg-red-50 transition-all duration-200"
             style={{
               color: selectedTheme.properties.textColor,
               borderColor: selectedTheme.properties.primary,
               background: selectedTheme.properties.background,
             }}
           >
-            <FiTrash2 className="text-2xl" />
-            <span className="text-base font-medium">Clear Canvas</span>
+            <FiTrash2 className="text-lg" />
+            <span className="text-sm font-medium">Clear Canvas</span>
           </button>
         </div>
       </div>
