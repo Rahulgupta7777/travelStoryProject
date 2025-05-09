@@ -158,7 +158,7 @@ export default function DotGridEditor() {
             >
               Canvas
             </h1>
-            <div className="flex flex-row items-center gap-1 ml-[350px]">
+            <div className="flex flex-row items-center gap-1 ml-[450px]">
               <button
                 className={`bg-white px-3 py-2 border border-gray-300 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium ${
                   isLoading
@@ -221,12 +221,12 @@ export default function DotGridEditor() {
           </div>
         </div>
 
-        {/* Canvas Area */}
+
         <div className="flex-1 overflow-auto">
           <Canvas zoomLevel={zoomLevel} ref={targetRef} theme={selectedTheme} />
         </div>
 
-        {/* Toolbox */}
+
         <div className="w-72 p-4 border-l shadow-sm bg-white sticky right-0 top-0 z-10">
           <Toolbox targetRef={targetRef} onThemeChange={setSelectedTheme} />
         </div>
