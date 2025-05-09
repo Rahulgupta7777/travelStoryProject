@@ -11,7 +11,7 @@ import {
 
 import { useState, useRef } from "react";
 import Toolbox from "./Toolbox";
-import CanvasKa from "./CanvasKa";
+import Canvas from "./Canvas";
 import Loader from "./Loader";
 import { Player } from "@remotion/player";
 import { CanvasVideo } from "../../remotion/Composition";
@@ -46,25 +46,55 @@ export default function DotGridEditor() {
 
   const handleDownloadVideo = async () => {
     if (isLoading) return;
+    const elements = targetRef.current.canvasElement;
+    if (!elements || elements.length === 0) {
+      alert("No elements to preview. Please add some content first.");
+      return;
+    }
+    setCanvasElements(elements);
+    setShowVideoPreview(true);
+  };
+
+  const handleRecordAndDownload = async () => {
     setIsLoading(true);
-    setLoadingMessage("Generating Animated Travel Story Video...");
+    setLoadingMessage("Recording 5s video of canvas...");
     try {
-      const elements = await targetRef.current.getCanvasElements();
-      if (!elements || elements.length === 0) {
-        throw new Error(
-          "No elements to preview. Please add some content first."
-        );
-      }
-      setCanvasElements(elements);
-      setShowVideoPreview(true);
-    } catch (error) {
-      console.error("Error generating video:", error);
-      alert(error.message);
-    } finally {
+      const canvasNode =
+        targetRef.current?.getCanvasNode?.() ||
+        document.querySelector("canvas");
+      if (!canvasNode) throw new Error("Canvas not found");
+      const stream = canvasNode.captureStream(30);
+      const recordedChunks = [];
+      const mediaRecorder = new window.MediaRecorder(stream, {
+        mimeType: "video/webm",
+      });
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "canvas-recording.webm";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      };
+      mediaRecorder.start();
       setTimeout(() => {
+        mediaRecorder.stop();
         setIsLoading(false);
         setLoadingMessage("");
-      }, 500);
+        setShowVideoPreview(false);
+      }, 5000);
+    } catch (error) {
+      setIsLoading(false);
+      setLoadingMessage("");
+      alert("Failed to record video: " + error.message);
     }
   };
 
@@ -108,43 +138,40 @@ export default function DotGridEditor() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50  ">
-      {/* Header */}
+    <div className="h-screen flex flex-col bg-gray-50">
       <div className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-row items-center justify-between">
+          <div className="flex flex-end items-center justify-between">
             <h1
-              className="text-3xl font-bold tracking-tight"
+              className="text-6xl font-bold tracking-tight"
               style={{
-                background: "linear-gradient(135deg, #1a365d 0%, #2d3748 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "'Playfair Display', serif",
-                letterSpacing: "-0.02em",
+                fontFamily: "'Great Vibes', cursive",
+                letterSpacing: "0.04em",
                 marginBottom: 0,
-                lineHeight: 1.2,
+                lineHeight: 1.1,
                 marginLeft: "500px",
+                textShadow: "0 2px 8px rgba(56,178,172,0.12)",
               }}
             >
               Canvas
             </h1>
-            <div className="flex flex-row items-center gap-1 ml-[450px] ">
+            <div className="flex flex-row items-center gap-1 ml-[650px]">
               <button
-                className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium px-9 ${
+                className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium ${
                   isLoading
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:shadow-md hover:border-gray-400"
                 }`}
                 onClick={handleDownloadPDF}
                 disabled={isLoading}
-                style={{ height: "44px" }}
+                style={{ height: "44px", fontSize: "15px" }}
               >
                 <FiDownload className="text-gray-500 text-base" />
                 <span>Download PDF</span>
               </button>
 
               <button
-                className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium px-9  ${
+                className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium ${
                   isLoading
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:shadow-md hover:border-gray-400"
@@ -161,104 +188,87 @@ export default function DotGridEditor() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Toolbar */}
-        <div className="flex flex-col gap-3 p-4 border-r shadow-sm bg-white sticky left-0 top-0 z-10">
-          <button
-            className="bg-white p-2 border rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-            onClick={() => !zoomDisable && setZoomLevel(zoomLevel * 1.05)}
-          >
-            <FiPlus className="text-gray-600" />
-          </button>
-          <button
-            className="bg-white p-2 border rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-            onClick={() => !zoomDisable && setZoomLevel(zoomLevel * 0.95)}
-          >
-            <FiMinus className="text-gray-600" />
-          </button>
-          <button
-            className={`p-2 border rounded-lg shadow-sm transition-colors ${
-              zoomDisable
-                ? "bg-gray-800 text-white"
-                : "bg-white hover:bg-gray-50 text-gray-600"
-            }`}
-            onClick={() => setZoomDisable(!zoomDisable)}
-          >
-            <FiLock />
-          </button>
+        <div className="flex flex-col items-center justify-center h-full fixed left-6 top-0 z-20">
+          <div className="flex flex-col gap-4 p-4 bg-white/90 border border-gray-200 rounded-2xl shadow-xl mt-32">
+            <button
+              className="bg-white w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-200 shadow hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 text-2xl"
+              onClick={() => !zoomDisable && setZoomLevel(zoomLevel * 1.05)}
+              title="Zoom In"
+            >
+              <FiPlus className="text-gray-600" />
+            </button>
+            <button
+              className="bg-white w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-200 shadow hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 text-2xl"
+              onClick={() => !zoomDisable && setZoomLevel(zoomLevel * 0.95)}
+              title="Zoom Out"
+            >
+              <FiMinus className="text-gray-600" />
+            </button>
+            <button
+              className={`w-12 h-12 flex items-center justify-center rounded-xl border-2 shadow text-2xl transition-all duration-200 ${
+                zoomDisable
+                  ? "bg-gray-800 text-white border-gray-800"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-blue-400"
+              }`}
+              onClick={() => setZoomDisable(!zoomDisable)}
+              title="Lock/Unlock Zoom"
+            >
+              <FiLock />
+            </button>
+          </div>
         </div>
 
         {/* Canvas Area */}
         <div className="flex-1 overflow-auto">
-          <CanvasKa
-            zoomLevel={zoomLevel}
-            ref={targetRef}
-            theme={selectedTheme}
-          />
+          <Canvas zoomLevel={zoomLevel} ref={targetRef} theme={selectedTheme} />
         </div>
 
-        {/* Right Toolbar */}
-        <div className="p-4 border-l shadow-sm bg-white sticky right-0 top-0">
+        {/* Toolbox */}
+        <div className="w-72 p-4 border-l shadow-sm bg-white sticky right-0 top-0 z-10">
           <Toolbox targetRef={targetRef} onThemeChange={setSelectedTheme} />
         </div>
       </div>
 
-      {/* Video Preview Modal */}
+      {isLoading && <Loader message={loadingMessage} />}
+
       {showVideoPreview && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-2xl p-8 max-w-[90%] w-[800px] shadow-xl relative">
-            <button
-              onClick={() => setShowVideoPreview(false)}
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <FiX className="text-gray-500" />
-            </button>
-            <h2
-              className="text-2xl font-semibold mb-4"
-              style={{
-                background: "linear-gradient(135deg, #1a365d 0%, #2d3748 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "'Playfair Display', serif",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Video Preview
-            </h2>
-            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden shadow-inner">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-4xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Video Preview</h2>
+              <button
+                onClick={() => setShowVideoPreview(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FiX className="text-2xl" />
+              </button>
+            </div>
+            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
               <Player
                 component={CanvasVideo}
-                durationInFrames={150}
-                compositionWidth={800}
-                compositionHeight={600}
-                fps={30}
                 inputProps={{ elements: canvasElements }}
-                style={{ width: "100%", height: "100%" }}
-                controls
-                autoPlay
-                loop
+                durationInFrames={150}
+                fps={30}
+                compositionWidth={1920}
+                compositionHeight={1080}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                }}
               />
             </div>
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="mt-4 flex justify-end">
               <button
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
-                onClick={() => setShowVideoPreview(false)}
+                onClick={handleRecordAndDownload}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                onClick={handleRenderVideo}
-              >
-                Render Video
+                Download Video
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {isLoading && <Loader text={loadingMessage} />}
     </div>
   );
 }
