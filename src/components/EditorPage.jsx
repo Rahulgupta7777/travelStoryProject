@@ -143,44 +143,42 @@ export default function DotGridEditor() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-end items-center justify-between">
             <h1
-              className="text-3xl font-bold tracking-tight"
+              className="text-6xl font-bold tracking-tight"
               style={{
                 fontFamily: "'Great Vibes', cursive",
-                background: "linear-gradient(90deg, #1a365d 0%, #38b2ac 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
                 letterSpacing: "0.04em",
                 marginBottom: 0,
                 lineHeight: 1.1,
-                marginLeft: "300px",
+                marginLeft: "500px",
                 textShadow: "0 2px 8px rgba(56,178,172,0.12)",
               }}
             >
               Canvas
             </h1>
-            <div className="flex flex-row items-center gap-1 ml-[450px]">
+            <div className="flex flex-row items-center gap-1 ml-[650px]">
               <button
-                className={`bg-white px-3 py-2 border border-gray-300 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium ${
+                className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium ${
                   isLoading
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:shadow-md hover:border-gray-400"
                 }`}
                 onClick={handleDownloadPDF}
                 disabled={isLoading}
-                style={{ height: "36px", fontSize: "13px" }}
+                style={{ height: "44px", fontSize: "15px" }}
               >
                 <FiDownload className="text-gray-500 text-base" />
                 <span>Download PDF</span>
               </button>
+
               <button
-                className={`bg-white px-3 py-2 border border-gray-300 rounded-lg shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium ${
+                className={`bg-white px-5 py-2.5 border border-gray-300 rounded-xl shadow transition-all duration-200 ease-in-out flex items-center gap-2 text-sm font-medium ${
                   isLoading
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:shadow-md hover:border-gray-400"
                 }`}
                 onClick={handleDownloadVideo}
                 disabled={isLoading}
-                style={{ height: "36px" }}
+                style={{ height: "44px" }}
               >
                 <FiDownloadCloud className="text-gray-500 text-base" />
                 <span>Download Video</span>
@@ -191,24 +189,24 @@ export default function DotGridEditor() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex flex-col items-center justify-center h-full fixed left-2 top-0 z-20">
-          <div className="flex flex-col gap-2 p-2 bg-white/90 border border-gray-200 rounded-xl shadow-lg mt-16">
+        <div className="flex flex-col items-center justify-center h-full fixed left-6 top-0 z-20">
+          <div className="flex flex-col gap-4 p-4 bg-white/90 border border-gray-200 rounded-2xl shadow-xl mt-32">
             <button
-              className="bg-white w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 shadow hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 text-lg"
+              className="bg-white w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-200 shadow hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 text-2xl"
               onClick={() => !zoomDisable && setZoomLevel(zoomLevel * 1.05)}
               title="Zoom In"
             >
               <FiPlus className="text-gray-600" />
             </button>
             <button
-              className="bg-white w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 shadow hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 text-lg"
+              className="bg-white w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-200 shadow hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 text-2xl"
               onClick={() => !zoomDisable && setZoomLevel(zoomLevel * 0.95)}
               title="Zoom Out"
             >
               <FiMinus className="text-gray-600" />
             </button>
             <button
-              className={`w-8 h-8 flex items-center justify-center rounded-lg border shadow text-lg transition-all duration-200 ${
+              className={`w-12 h-12 flex items-center justify-center rounded-xl border-2 shadow text-2xl transition-all duration-200 ${
                 zoomDisable
                   ? "bg-gray-800 text-white border-gray-800"
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-blue-400"
@@ -221,12 +219,12 @@ export default function DotGridEditor() {
           </div>
         </div>
 
-
+        {/* Canvas Area */}
         <div className="flex-1 overflow-auto">
           <Canvas zoomLevel={zoomLevel} ref={targetRef} theme={selectedTheme} />
         </div>
 
-
+        {/* Toolbox */}
         <div className="w-72 p-4 border-l shadow-sm bg-white sticky right-0 top-0 z-10">
           <Toolbox targetRef={targetRef} onThemeChange={setSelectedTheme} />
         </div>
@@ -236,14 +234,14 @@ export default function DotGridEditor() {
 
       {showVideoPreview && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-xl shadow-lg max-w-2xl w-full">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold">Video Preview</h2>
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-4xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Video Preview</h2>
               <button
                 onClick={() => setShowVideoPreview(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <FiX className="text-xl" />
+                <FiX className="text-2xl" />
               </button>
             </div>
             <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
@@ -260,10 +258,10 @@ export default function DotGridEditor() {
                 }}
               />
             </div>
-            <div className="mt-2 flex justify-end">
+            <div className="mt-4 flex justify-end">
               <button
                 onClick={handleRecordAndDownload}
-                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Download Video
               </button>
